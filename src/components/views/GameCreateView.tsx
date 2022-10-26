@@ -21,7 +21,7 @@ const styles = StyleSheet.create({
   },
 });
 
-const MainMenuView: FC<Props> = (props: Props) => {
+const GameCreateView: FC<Props> = (props: Props) => {
   useEffect(() => {
   
   }, []);
@@ -38,4 +38,4 @@ const MainMenuView: FC<Props> = (props: Props) => {
   </View>;
 };
 
-export default MainMenuView;
+export default GameCreateView;

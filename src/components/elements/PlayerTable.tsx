@@ -1,5 +1,14 @@
 import React, { FC, useEffect, useState } from 'react';
-import { StyleSheet, Text, TextInput, TouchableWithoutFeedback, View } from 'react-native';
+import {
+  SafeAreaView,
+  ScrollView,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableWithoutFeedback,
+  View,
+} from 'react-native';
 import MenuButton from './MenuButton';
 import { Gender, Player, usePlayer } from '../../player';
 import appStyles from '../appStyles';
@@ -23,9 +32,14 @@ const PlayerTable: FC = () => {
     genderSelect: {},
     tableRow: {},
     container: {
-      flexDirection: 'column', // inner items will be added vertically
-      flexGrow: 1,            // all the available vertical space will be occupied by it
-      justifyContent: 'space-between',
+      marginHorizontal: 20,
+      // flexDirection: 'column', // inner items will be added vertically
+      // flexGrow: 1,            // all the available vertical space will be occupied by it
+      // justifyContent: 'space-between',
+    },
+    safeArea: {
+      flex: 1,
+      paddingTop: StatusBar.currentHeight,
     },
     remove: {
       height: 30,
@@ -45,7 +59,7 @@ const PlayerTable: FC = () => {
       fontSize: 35,
       flex: 1,
       paddingLeft: 19,
-      color: appStyles.colors.dark_primary
+      color: appStyles.colors.dark_primary,
     },
   });
   const genderSelects: RadioButtonValue[] = [{
@@ -109,11 +123,11 @@ const PlayerTable: FC = () => {
         <View>
           <TouchableWithoutFeedback
             onPress={ () => {
-              setPlayers((prev)=> {
-                return prev.filter((val, ind)=>{
-                  return ind != index
-                })
-              })
+              setPlayers((prev) => {
+                return prev.filter((val, ind) => {
+                  return ind != index;
+                });
+              });
             } }
             style={ styles.remove }
           >
@@ -125,20 +139,23 @@ const PlayerTable: FC = () => {
     });
   };
   
-  return <View style={ styles.container }>
-    <View>
-      { renderPlayers() }
-      <MenuButton
-        onPress={ () => {
-          setPlayers((prev) => [...prev, new Player()]);
-        } } title={ 'Добавить игрока' }
-      />
-    </View>
-    <MenuButton title={ 'Начать игру' } onPress={ () => {
-      setRealPlayers(players);
-      global_navigate('Game');
-    } } />
-  </View>;
+  return <SafeAreaView style={styles.safeArea}>
+    <ScrollView style={ styles.container }>
+      <View style={{display: 'flex'}}>
+        { renderPlayers() }
+        <MenuButton
+          onPress={ () => {
+            setPlayers((prev) => [...prev, new Player()]);
+          } } title={ 'Добавить игрока' }
+        />
+      </View>
+    </ScrollView>
+      <MenuButton title={ 'Начать игру' } onPress={ () => {
+        setRealPlayers(players);
+        global_navigate('Game');
+      } } />
+
+  </SafeAreaView>;
 };
 
 export default PlayerTable;
