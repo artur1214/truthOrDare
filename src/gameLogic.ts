@@ -1,133 +1,97 @@
 import { Player } from './player';
-import { getRandom, stringFmt } from './utils';
+import { fmtTask, getRandom, stringFmt } from './utils';
 import { useEffect, useState } from 'react';
-import game_tasks from '../game_tasks/tasks.json';
+import { game_tasks, GameTask, PackNames, PackNamesType, Packs } from '../game_tasks/tasks';
+import { useSettings } from './settingsManager';
 
-type GameTask = {
-  text: string,
-  pack_id: number,
-  pack_name: string
-}
-export const PackNames = {
-  dares_social: "dares_social",
-  dares_general1: "dares_general1",
-  dares_general2: "dares_general2",
-  dares_general3: "dares_general3",
-  dares_general4: "dares_general4",
-  dares_family1: "dares_family1",
-  dares_family2: "dares_family2",
-  dares_alcohol1: "dares_alcohol1",
-  dares_alcohol2: "dares_alcohol2",
-  dares_ero1: "dares_ero1",
-  dares_ero2: "dares_ero2",
-  dares_ero3: "dares_ero3",
-  dares_erohard: "dares_erohard",
-  dares_school: "dares_school",
-  dares_newyear: "dares_newyear",
-  dares_outdoor1: "dares_outdoor1",
-  dares_outdoor2: "dares_outdoor2",
-  truth_simple1: "truth_simple1",
-  truth_simple2: "truth_simple2",
-  truth_simple3: "truth_simple3",
-  truth_simple4: "truth_simple4",
-  truths_ero1: "truths_ero1",
-  truths_ero2: "truths_ero2",
-  truths_ero3: "truths_ero3",
-  truths_serious1: "truths_serious1",
-  truths_serious2: "truths_serious2",
-  truths_serious3: "truths_serious3",
-  truths_serious4: "truths_serious4",
-  dares_mass: "dares_mass",
-};
 
 //TODO: Choose only ages which enabled in settings
-type PacksType = {
-  12: (keyof typeof PackNames)[],
-  16: (keyof typeof PackNames)[],
-  18: (keyof typeof PackNames)[],
-  21: (keyof typeof PackNames)[]
+export type PacksType = {
+  12: readonly (keyof typeof PackNames)[],
+  16: readonly (keyof typeof PackNames)[],
+  18: readonly (keyof typeof PackNames)[],
+  21: readonly (keyof typeof PackNames)[]
 }
-export const Packs: PacksType = {
-  12: [
-    "dares_social",
-    "truth_simple1",
-    "truth_simple2",
-    "truth_simple3",
-    "truth_simple4",
-    "truths_serious1",
-    "truths_serious2",
-    "truths_serious3",
-    "truths_serious4",
-    "dares_newyear",
-    "dares_family1",
-    "dares_family2",
-    "dares_general1",
-    "dares_general2",
-    "dares_general3",
-  ],
-  16: [
-    "truths_serious2",
-    "truths_ero1",
-    "truths_serious1",
-    "truth_simple1",
-    "dares_newyear",
-    "dares_mass",
-    "dares_general2",
-    "dares_general3",
-    "dares_general1",
-    "dares_general4",
-    "dares_outdoor1",
-    "dares_outdoor2",
-  ],
-  18: [
-    "dares_ero3",
-    "dares_ero2",
-    "dares_ero1",
-    "dares_alcohol2",
-    "dares_alcohol1",
-    "truths_ero1",
-    "truths_ero2",
-    "truths_ero3",
-    "truths_serious2",
-  ],
-  21: [
-    "dares_erohard",
-    "truths_ero3",
 
-  ],
-  
-};
+export const packsAges = Object.keys(Packs) as unknown as (keyof PacksType & number)[];
 
 export interface GameInstance {
-  truth: (player: Player) => string;
+  truth: (player: Player) => string,
+  dare: (player: Player) => string
 }
 
 export function useGame(players: Player[]): [GameInstance, ((p: Player[]) => void)] {
-  const [gameInstance, setGameInstance] = useState<GameInstance>(game(players));
+  const [settings, setSettings] = useSettings();
+  const packs: PackNamesType[] = settings.selectedAges.map((value: (keyof PacksType & number)) => {
+    return [...Packs[value]];
+  }).reduce((accum: PackNamesType[], val: PackNamesType[]) => accum.concat(val), []);
   
+  const [gameInstance, setGameInstance] = useState<GameInstance>(game(players, [...packs]));
   useEffect(() => {
-    game_tasks;
-  }, [gameInstance]);
+    setGameInstance(game(players, [...packs]));
+  }, []);
+  useEffect(() => {
+    setGameInstance(game(players, [...packs])); //On settings loaded make game instance
+  }, [settings]);
+  
   const updatePlayers = (p: Player[]) => {
-    setGameInstance(game(players));
+    setGameInstance(game(players, [...packs]));
   };
   return [gameInstance, updatePlayers];
 }
 
-const game = function(players: Player[]): GameInstance {
-  const truth: GameTask[] = [...Object.values<GameTask[]>(Object.fromEntries(
-    Object.entries(game_tasks).filter(([key, value]) => key.includes("truth")),
-  )).reduce((accum, val) => accum.concat(val), [])];
-  console.log(truth);
-
+const game = function(players: Player[], game_packs: PackNamesType[]): GameInstance {
+  
+  const truth: GameTask[] = Object.values(game_tasks).reduce((accum, val) => accum.concat(val), []).filter(
+    (value) => {
+      return game_packs.includes(value.pack_name) && value.pack_name.startsWith('truth');
+    },
+  );
+  
+  const dare: GameTask[] = Object.values(game_tasks).reduce((accum, val) => accum.concat(val), []).filter(
+    (value) => {
+      return game_packs.includes(value.pack_name) && value.pack_name.startsWith('dare');
+    },
+  );
+  
   const getTruth = (player: Player) => {
-    console.log("pp ", players);
-    return stringFmt(getRandom(truth).text, {
-      p1: player.name, p2: getRandom(players.filter(p => p != player))?.name ?? "ERROR",
+    return stringFmt(getRandom(truth)?.text || '', {
+      p1: player.name, p2: getRandom(players.filter(p => p != player))?.name ?? 'ERROR',
     });
   };
-
+  
+  const getDare = (player: Player) => {
+    //console.log('pp ', players);
+    let task;
+    while (1){
+      task = getRandom(dare)?.text || ''
+      if (task.startsWith('<')){
+        break;
+      }
+    }
+    let res;
+    while (1) {
+      res = fmtTask(task || '', {
+        current_player: player, other_players: players.filter(p => p != player),
+      })
+      if (res!== undefined) {
+        break
+      }
+      else{
+        while (1){
+          task = getRandom(dare)?.text || ''
+          if (task.startsWith('<')){
+            break;
+          }
+        }
+      }
+    }
+    console.log('"' + task + '"');
+   return res || '';
+    
+  };
   return {
     truth: getTruth,
+    dare: getDare,
   };
 };
