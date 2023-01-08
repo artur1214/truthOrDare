@@ -1,6 +1,6 @@
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../../App';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import React, { FC, useEffect, useState } from 'react';
 import GameButton from '../elements/GameButton';
 import { GameInstance, useGame } from '../../gameLogic';
@@ -27,7 +27,16 @@ const styles = StyleSheet.create({
     // alignItems: 'center'
   },
   arrow: {
-  }, arrow_container: {},
+  },
+  arrow_container: {
+  
+  },
+  player_name_container: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    
+  },
+  
   
 });
 
@@ -79,6 +88,13 @@ export const Game: FC<Props> = (props) => {
             setModalVisible(true);
           } } />
         </View>
+        <View style={styles.player_name_container}>
+          <Text
+          style={ {
+              fontSize: 36,
+              color: currentPlayer?.gender == 'w'? 'pink' : 'blue'
+            } }>{currentPlayer?.name || ''}</Text>
+        </View>
       </View>
       <TaskModal
         visible={ modalVisible }
@@ -88,6 +104,7 @@ export const Game: FC<Props> = (props) => {
           
           setModalVisible(false);
         } }
+        
       />
     </View>);
 };
