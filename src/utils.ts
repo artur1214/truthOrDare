@@ -41,7 +41,7 @@ export function fmtTask(task: string, players: { current_player: Player, other_p
   let resultTask = task;
   //console.log('plf', players);
   if (task.startsWith('<M>') || task.startsWith('<F>')) {
-    resultTask = resultTask.replace(fmtUnits[0], players.current_player.name + ' ' + players.current_player.gender + ' ');
+    resultTask = resultTask.replace(fmtUnits[0], players.current_player.name + ' ');
     fmtUnits = fmtUnits.slice(1);
   }
   resultTask = resultTask.replace('<P>', ' Делимся на пары! ');
